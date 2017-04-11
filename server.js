@@ -16,21 +16,31 @@ function handleRequest(req, res) {
   let ext = path.extname(pathname);
   let typeExt = {
     '.html': 'text/html',
-    '.js':   'text/javascript',
-    '.css':  'text/css'
+    '.js': 'text/javascript',
+    '.css': 'text/css'
   };
   let contentType = typeExt[ext] || 'text/plain';
 
   fs.readFile(__dirname + pathname,
     function (err, data) {
-      // if there is an error
       if (err) {
         res.writeHead(500);
         return res.end('Error loading ' + pathname);
       }
-      // Otherwise, send the data, the contents of the file
-      res.writeHead(200,{ 'Content-Type': contentType });
+      res.writeHead(200, { 'Content-Type': contentType });
       res.end(data);
     }
   );
 }
+
+let io = require('socket.io').listen(server);
+
+io.sockets.on('connection',
+  function (socket) {
+    console.log("We have a new client: " + socket.id);
+    socket.emit('newEntity', socket.id);
+    socket.on('disconnect', function () {
+      console.log("Client has disconnected " + socket.id);
+    });
+  }
+);
